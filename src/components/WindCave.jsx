@@ -7,7 +7,7 @@ import RadioInput from '../../../../components/common/Form/RadioInput';
 import usePerformPlaceOrder from '../hooks/usePerformPlaceOrder';
 import usePayOneCheckoutFormContext from '../hooks/usePayOneCheckoutFormContext';
 import usePayOneCartContext from '../hooks/usePayOneCartContext';
-import { getPayOneBaseConfig } from '../utility/payOneBaseConfig';
+import { config } from '../../../../config';
 
 import usePaymentMethodCartContext from '../../../../components/paymentMethod/hooks/usePaymentMethodCartContext';
 import usePaymentMethodFormContext from '../../../../components/paymentMethod/hooks/usePaymentMethodFormContext';
@@ -24,15 +24,30 @@ function WindCave({ method, selected, actions }) {
     [performPlaceOrder]
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState(null);
   useEffect(() => {
     registerPaymentAction(method.code, placeOrderWithPayPal);
   }, [method, registerPaymentAction, placeOrderWithPayPal]);
-  console.log(getPayOneBaseConfig);
-  console.log('getPayOneBaseConfig.pxpay2iframe');
+  const getIframeUrl = async () => {
+    const response = await fetch(
+      `${config.baseUrl}/bgpayment/windcave/iframeurl`
+    );
+    if (!response.ok) {
+      throw new Error('Network response was not ok.');
+    }
+    const data = await response.json();
+    // if (data && data.error) {
+    //   setErrorMessage(data.message);
+    //   return;
+    // }
+    setIframeUrl(data.redirect_uri);
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
     console.log('use effect test', orderId);
     if (orderId) {
-      setIsModalOpen(true);
+      getIframeUrl();
     }
   }, [orderId]);
 
@@ -44,7 +59,6 @@ function WindCave({ method, selected, actions }) {
     await actions.change(event);
     await submitHandler(methodSelected);
   };
-
   if (!isSelected) {
     return (
       <RadioInput
@@ -74,36 +88,13 @@ function WindCave({ method, selected, actions }) {
               isOpen={isModalOpen}
               onRequestClose={closeModal}
               contentLabel="Example Modal"
-              style={{
-                overlay: {
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: 'rgba(255, 255, 255, 0.75)',
-                },
-                content: {
-                  position: 'absolute',
-                  top: '40px',
-                  left: '40px',
-                  right: '40px',
-                  bottom: '40px',
-                  border: '1px solid #ccc',
-                  background: '#fff',
-                  overflow: 'auto',
-                  WebkitOverflowScrolling: 'touch',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  padding: '20px',
-                },
-              }}
+              shouldCloseOnOverlayClick={false}
             >
               {/* Your iframe code goes here */}
               <iframe
                 title="Your IFrame"
-                src="https://www.example.com/"
-                width="600"
+                src={iframeUrl}
+                width="100%"
                 height="400"
               />
               <button type="button" onClick={closeModal}>
