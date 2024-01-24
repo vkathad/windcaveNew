@@ -42,6 +42,7 @@ function WindCave({ method, selected, actions }) {
     // }
     setIframeUrl(data.redirect_uri);
     setIsModalOpen(true);
+    document.body.style.overflow = 'hidden';
   };
 
   useEffect(() => {
@@ -53,6 +54,7 @@ function WindCave({ method, selected, actions }) {
 
   const closeModal = () => {
     setIsModalOpen(false);
+    document.body.style.overflow = 'visible';
   };
   const handlePaymentMethodSelection = async (event) => {
     const methodSelected = _get(methodList, `${event.target.value}.code`);
@@ -89,13 +91,26 @@ function WindCave({ method, selected, actions }) {
               onRequestClose={closeModal}
               contentLabel="Example Modal"
               shouldCloseOnOverlayClick={false}
+              style={{
+                overlay: {
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                },
+                content: {
+                  width: '100%',
+                  height: '700px',
+                  margin: 'auto',
+                  overflow: 'hidden',
+                },
+              }}
             >
               {/* Your iframe code goes here */}
               <iframe
                 title="Your IFrame"
                 src={iframeUrl}
                 width="100%"
-                height="400"
+                height="700"
+                frameBorder="0"
+                allowFullScreen
               />
               <button type="button" onClick={closeModal}>
                 Close Modal
