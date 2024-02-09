@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { shape, func } from 'prop-types';
 import _get from 'lodash.get';
-import Modal from 'react-modal'; // Import the modal library
 import { paymentMethodShape } from '../../../../utils/payment';
 import RadioInput from '../../../../components/common/Form/RadioInput';
 import usePerformPlaceOrder from '../hooks/usePerformPlaceOrder';
@@ -23,11 +22,11 @@ function WindCave({ method, selected, actions }) {
     (values) => performPlaceOrder(values),
     [performPlaceOrder]
   );
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState(null);
   useEffect(() => {
     registerPaymentAction(method.code, placeOrderWithPayPal);
   }, [method, registerPaymentAction, placeOrderWithPayPal]);
+
   const getIframeUrl = async () => {
     const response = await fetch(
       `${config.baseUrl}/bgpayment/windcave/iframeurl`
@@ -41,21 +40,14 @@ function WindCave({ method, selected, actions }) {
     //   return;
     // }
     setIframeUrl(data.redirect_uri);
-    setIsModalOpen(true);
-    document.body.style.overflow = 'hidden';
   };
 
   useEffect(() => {
-    console.log('use effect test', orderId);
     if (orderId) {
       getIframeUrl();
     }
   }, [orderId]);
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    document.body.style.overflow = 'visible';
-  };
   const handlePaymentMethodSelection = async (event) => {
     const methodSelected = _get(methodList, `${event.target.value}.code`);
     await actions.change(event);
@@ -82,40 +74,18 @@ function WindCave({ method, selected, actions }) {
           checked={isSelected}
           onChange={handlePaymentMethodSelection}
         />
-        {orderId && (
+        {orderId && iframeUrl && (
           <div>
-            <h1>orderdata</h1>
-            {/* Modal component */}
-            <Modal
-              isOpen={isModalOpen}
-              onRequestClose={closeModal}
-              contentLabel="Example Modal"
-              shouldCloseOnOverlayClick={false}
-              style={{
-                overlay: {
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                },
-                content: {
-                  width: '100%',
-                  height: '700px',
-                  margin: 'auto',
-                  overflow: 'hidden',
-                },
-              }}
-            >
-              {/* Your iframe code goes here */}
-              <iframe
-                title="Your IFrame"
-                src={iframeUrl}
-                width="100%"
-                height="700"
-                frameBorder="0"
-                allowFullScreen
-              />
-              <button type="button" onClick={closeModal}>
-                Close Modal
-              </button>
-            </Modal>
+            <iframe
+              target="_parent"
+              className="windcave_pxpay2_iframe"
+              id="windcave_pxpay_iframe_container_iframe"
+              title="Your IFrame"
+              src={iframeUrl}
+              width="100%"
+              height="700"
+              allowFullScreen
+            />
           </div>
         )}
       </div>
